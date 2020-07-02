@@ -78,37 +78,74 @@ void Camera::setNewConfiguration(SpinnakerConfig& config, const uint32_t& level)
     if (level >= LEVEL_RECONFIGURE_STOP)
       setImageControlFormats(config);
 
-    setFrameRate(static_cast<float>(config.acquisition_frame_rate));
-    // Set enable after frame rate encase its false
-    setProperty(node_map_, "AcquisitionFrameRateEnable", config.acquisition_frame_rate_enable);
+    if (level >= LEVEL_RECONFIGURE_STOP ||
+        config.acquisition_frame_rate_enable != config_.acquisition_frame_rate_enable ||
+        config.acquisition_frame_rate != config_.acquisition_frame_rate)
+    {
+      if (config.acquisition_frame_rate_enable)
+      {
+        setFrameRate(static_cast<float>(config.acquisition_frame_rate));
+      }
+      else
+      {
+        // Set enable after frame rate encase its false
+        setProperty(node_map_, "AcquisitionFrameRateEnable", config.acquisition_frame_rate_enable);
+      }
+    }
 
     // Set Trigger and Strobe Settings
     // NOTE: The trigger must be disabled (i.e. TriggerMode = "Off") in order to configure whether the source is
     // software or hardware.
-    setProperty(node_map_, "TriggerMode", std::string("Off"));
-    setProperty(node_map_, "TriggerSource", config.trigger_source);
-    setProperty(node_map_, "TriggerSelector", config.trigger_selector);
-    setProperty(node_map_, "TriggerActivation", config.trigger_activation_mode);
-    setProperty(node_map_, "TriggerMode", config.enable_trigger);
+    if (level >= LEVEL_RECONFIGURE_STOP ||
+        config.enable_trigger != config_.enable_trigger ||
+        config.trigger_source != config_.trigger_source ||
+        config.trigger_selector != config_.trigger_selector ||
+        config.trigger_activation_mode != config_.trigger_activation_mode)
+    {
+      setProperty(node_map_, "TriggerMode", std::string("Off"));
+      setProperty(node_map_, "TriggerSource", config.trigger_source);
+      setProperty(node_map_, "TriggerSelector", config.trigger_selector);
+      setProperty(node_map_, "TriggerActivation", config.trigger_activation_mode);
+      setProperty(node_map_, "TriggerMode", config.enable_trigger);
+    }
 
-    setProperty(node_map_, "LineSelector", config.line_selector);
-    setProperty(node_map_, "LineMode", config.line_mode);
-    setProperty(node_map_, "LineSource", config.line_source);
-    setProperty(node_map_, "V3_3Enable", config.v3_3_enable);
+    if (level >= LEVEL_RECONFIGURE_STOP ||
+        config.line_selector != config_.line_selector ||
+        config.line_mode != config_.line_mode ||
+        config.line_source != config_.line_source ||
+        config.v3_3_enable != config_.v3_3_enable)
+    {
+      setProperty(node_map_, "LineSelector", config.line_selector);
+      setProperty(node_map_, "LineMode", config.line_mode);
+      setProperty(node_map_, "LineSource", config.line_source);
+      setProperty(node_map_, "V3_3Enable", config.v3_3_enable);
+    }
 
     // Set auto exposure
-    setProperty(node_map_, "ExposureMode", config.exposure_mode);
-    setProperty(node_map_, "ExposureAuto", config.exposure_auto);
+    if (level >= LEVEL_RECONFIGURE_STOP ||
+        config.exposure_mode != config_.exposure_mode)
+      setProperty(node_map_, "ExposureMode", config.exposure_mode);
+    if (level >= LEVEL_RECONFIGURE_STOP ||
+        config.exposure_auto != config_.exposure_auto)
+      setProperty(node_map_, "ExposureAuto", config.exposure_auto);
 
     // Set sharpness
     if (IsAvailable(node_map_->GetNode("SharpeningEnable")))
     {
-      setProperty(node_map_, "SharpeningEnable", config.sharpening_enable);
+      if (level >= LEVEL_RECONFIGURE_STOP ||
+          config.sharpening_enable != config_.sharpening_enable)
+        setProperty(node_map_, "SharpeningEnable", config.sharpening_enable);
       if (config.sharpening_enable)
       {
-        setProperty(node_map_, "SharpeningAuto", config.auto_sharpness);
-        setProperty(node_map_, "Sharpening", static_cast<float>(config.sharpness));
-        setProperty(node_map_, "SharpeningThreshold", static_cast<float>(config.sharpening_threshold));
+        if (level >= LEVEL_RECONFIGURE_STOP ||
+            config.auto_sharpness != config_.auto_sharpness)
+          setProperty(node_map_, "SharpeningAuto", config.auto_sharpness);
+        if (level >= LEVEL_RECONFIGURE_STOP ||
+            config.sharpness != config_.sharpness)
+          setProperty(node_map_, "Sharpening", static_cast<float>(config.sharpness));
+        if (level >= LEVEL_RECONFIGURE_STOP ||
+            config.sharpening_threshold != config_.sharpening_threshold)
+          setProperty(node_map_, "SharpeningThreshold", static_cast<float>(config.sharpening_threshold));
         Spinnaker::GenApi::CFloatPtr ptrSharpening = node_map_->GetNode("Sharpening");
         config.sharpness = ptrSharpening->GetValue();
       }
@@ -117,60 +154,94 @@ void Camera::setNewConfiguration(SpinnakerConfig& config, const uint32_t& level)
     // Set saturation
     if (IsAvailable(node_map_->GetNode("SaturationEnable")))
     {
-      setProperty(node_map_, "SaturationEnable", config.saturation_enable);
+      if (level >= LEVEL_RECONFIGURE_STOP ||
+          config.saturation_enable != config_.saturation_enable)
+        setProperty(node_map_, "SaturationEnable", config.saturation_enable);
       if (config.saturation_enable)
       {
-        setProperty(node_map_, "Saturation", static_cast<float>(config.saturation));
+        if (level >= LEVEL_RECONFIGURE_STOP ||
+            config.saturation != config_.saturation)
+          setProperty(node_map_, "Saturation", static_cast<float>(config.saturation));
       }
     }
 
     // Set shutter time/speed
     if (config.exposure_auto.compare(std::string("Off")) == 0)
     {
-      setProperty(node_map_, "ExposureTime", static_cast<float>(config.exposure_time));
+      if (level >= LEVEL_RECONFIGURE_STOP ||
+          config.exposure_time != config_.exposure_time)
+        setProperty(node_map_, "ExposureTime", static_cast<float>(config.exposure_time));
     }
     else
     {
-      setProperty(node_map_, "AutoExposureExposureTimeUpperLimit",
-                  static_cast<float>(config.auto_exposure_time_upper_limit));
+      if (level >= LEVEL_RECONFIGURE_STOP ||
+          config.auto_exposure_time_upper_limit != config_.auto_exposure_time_upper_limit)
+        setProperty(node_map_, "AutoExposureExposureTimeUpperLimit",
+                    static_cast<float>(config.auto_exposure_time_upper_limit));
     }
     Spinnaker::GenApi::CFloatPtr ptrExposureTime = node_map_->GetNode("ExposureTime");
     config.exposure_time = ptrExposureTime->GetValue();
+    ROS_INFO_STREAM("ExposureTime: " << ptrExposureTime->GetValue());
 
     // Set gain
-    setProperty(node_map_, "GainSelector", config.gain_selector);
-    setProperty(node_map_, "GainAuto", config.auto_gain);
+    if (level >= LEVEL_RECONFIGURE_STOP ||
+        config.gain_selector != config_.gain_selector)
+      setProperty(node_map_, "GainSelector", config.gain_selector);
+    if (level >= LEVEL_RECONFIGURE_STOP ||
+        config.auto_gain != config_.auto_gain)
+      setProperty(node_map_, "GainAuto", config.auto_gain);
     if (config.auto_gain.compare(std::string("Off")) == 0)
     {
-      setProperty(node_map_, "Gain", static_cast<float>(config.gain));
+      if (level >= LEVEL_RECONFIGURE_STOP ||
+          config.gain != config_.gain)
+        setProperty(node_map_, "Gain", static_cast<float>(config.gain));
     }
     Spinnaker::GenApi::CFloatPtr ptrGain = node_map_->GetNode("Gain");
     config.gain = ptrGain->GetValue();
 
     // Set brightness
-    setProperty(node_map_, "BlackLevel", static_cast<float>(config.brightness));
+    if (level >= LEVEL_RECONFIGURE_STOP ||
+        config.brightness != config_.brightness)
+      setProperty(node_map_, "BlackLevel", static_cast<float>(config.brightness));
 
     // Set gamma
+    if (level >= LEVEL_RECONFIGURE_STOP ||
+        config.gamma_enable != config_.gamma_enable)
+      setProperty(node_map_, "GammaEnable", config.gamma_enable);
     if (config.gamma_enable)
     {
-      setProperty(node_map_, "GammaEnable", config.gamma_enable);
-      setProperty(node_map_, "Gamma", static_cast<float>(config.gamma));
+      if (level >= LEVEL_RECONFIGURE_STOP ||
+          config.gamma != config_.gamma)
+        setProperty(node_map_, "Gamma", static_cast<float>(config.gamma));
     }
 
     // Set white balance
     if (IsAvailable(node_map_->GetNode("BalanceWhiteAuto")))
     {
-      setProperty(node_map_, "BalanceWhiteAuto", config.auto_white_balance);
+      if (level >= LEVEL_RECONFIGURE_STOP ||
+          config.auto_white_balance != config_.auto_white_balance)
+        setProperty(node_map_, "BalanceWhiteAuto", config.auto_white_balance);
       if (config.auto_white_balance.compare(std::string("Off")) == 0)
       {
-        setProperty(node_map_, "BalanceRatioSelector", std::string("Blue"));
-        setProperty(node_map_, "BalanceRatio", static_cast<float>(config.white_balance_blue_ratio));
-        Spinnaker::GenApi::CFloatPtr ptrBalanceRatioBlue = node_map_->GetNode("BalanceRatio");
-        config.white_balance_blue_ratio = ptrBalanceRatioBlue->GetValue();
-        setProperty(node_map_, "BalanceRatioSelector", std::string("Red"));
-        setProperty(node_map_, "BalanceRatio", static_cast<float>(config.white_balance_red_ratio));
-        Spinnaker::GenApi::CFloatPtr ptrBalanceRatioRed = node_map_->GetNode("BalanceRatio");
-        config.white_balance_blue_ratio = ptrBalanceRatioRed->GetValue();
+        if (level >= LEVEL_RECONFIGURE_STOP ||
+            config.white_balance_blue_ratio != config_.white_balance_blue_ratio)
+        {
+          setProperty(node_map_, "BalanceRatioSelector", std::string("Blue"));
+          setProperty(node_map_, "BalanceRatio",
+                      static_cast<float>(config.white_balance_blue_ratio));
+          Spinnaker::GenApi::CFloatPtr ptrBalanceRatioBlue = node_map_->GetNode("BalanceRatio");
+          config.white_balance_blue_ratio = ptrBalanceRatioBlue->GetValue();
+        }
+
+        if (level >= LEVEL_RECONFIGURE_STOP ||
+            config.white_balance_red_ratio != config_.white_balance_red_ratio)
+        {
+          setProperty(node_map_, "BalanceRatioSelector", std::string("Red"));
+          setProperty(node_map_, "BalanceRatio",
+                      static_cast<float>(config.white_balance_red_ratio));
+          Spinnaker::GenApi::CFloatPtr ptrBalanceRatioRed = node_map_->GetNode("BalanceRatio");
+          config.white_balance_red_ratio = ptrBalanceRatioRed->GetValue();
+        }
       }
       else
       {
@@ -179,123 +250,136 @@ void Camera::setNewConfiguration(SpinnakerConfig& config, const uint32_t& level)
         config.white_balance_blue_ratio = ptrBalanceRatioBlue->GetValue();
         setProperty(node_map_, "BalanceRatioSelector", std::string("Red"));
         Spinnaker::GenApi::CFloatPtr ptrBalanceRatioRed = node_map_->GetNode("BalanceRatio");
-        config.white_balance_blue_ratio = ptrBalanceRatioRed->GetValue();
+        config.white_balance_red_ratio = ptrBalanceRatioRed->GetValue();
       }
     }
 
     // Color correction matrix
-    if (IsAvailable(node_map_->GetNode("IspEnable")))
+    if (level >= LEVEL_RECONFIGURE_STOP ||
+        config.color_correction_enable != config_.color_correction_enable ||
+        config.color_correction_light_source != config_.color_correction_light_source ||
+        config.color_correction_matrix != config_.color_correction_matrix)
     {
-      if (IsAvailable(node_map_->GetNode("ColorTransformationSelector")) &&
-          IsAvailable(node_map_->GetNode("ColorTransformationEnable")) &&
-          IsAvailable(node_map_->GetNode("RgbTransformLightSource")))
+      if (IsAvailable(node_map_->GetNode("IspEnable")))
       {
-        if (config.color_correction_enable)
+        if (IsAvailable(node_map_->GetNode("ColorTransformationSelector")) &&
+            IsAvailable(node_map_->GetNode("ColorTransformationEnable")) &&
+            IsAvailable(node_map_->GetNode("RgbTransformLightSource")))
         {
-          setProperty(node_map_, "IspEnable", true);
-          setProperty(node_map_, "ColorTransformationSelector", std::string("RGBtoRGB"));
-          setProperty(node_map_, "ColorTransformationEnable", true);
-          setProperty(node_map_, "RgbTransformLightSource", config.color_correction_light_source);
-          std::vector<std::vector<float>> ccm = {
-            { 1.0f, 0.0f, 0.0f, },
-            { 0.0f, 1.0f, 0.0f, },
-            { 0.0f, 0.0f, 1.0f, },
-            { 0.0f, 0.0f, 0.0f, },
-          };
-          if (config.color_correction_light_source == "Custom")
+          if (config.color_correction_enable)
           {
-            try
+            setProperty(node_map_, "IspEnable", true);
+            setProperty(node_map_, "ColorTransformationSelector", std::string("RGBtoRGB"));
+            setProperty(node_map_, "ColorTransformationEnable", true);
+            setProperty(node_map_, "RgbTransformLightSource", config.color_correction_light_source);
+            std::vector<std::vector<float>> ccm = {
+              { 1.0f, 0.0f, 0.0f, },
+              { 0.0f, 1.0f, 0.0f, },
+              { 0.0f, 0.0f, 1.0f, },
+              { 0.0f, 0.0f, 0.0f, },
+            };
+            if (config.color_correction_light_source == "Custom")
             {
-              ccm = YAML::Load(config.color_correction_matrix).as<std::vector<std::vector<float>>>();
-              if (ccm.size() != 4) throw std::runtime_error("invalid");
-              for (const auto &v : ccm)
-                if (v.size() != 3) throw std::runtime_error("invalid");
+              try
+              {
+                ccm = YAML::Load(config.color_correction_matrix).as<std::vector<std::vector<float>>>();
+                if (ccm.size() != 4) throw std::runtime_error("invalid");
+                for (const auto &v : ccm)
+                  if (v.size() != 3) throw std::runtime_error("invalid");
+              }
+              catch (...)
+              {
+                ccm = {
+                  { 1.0f, 0.0f, 0.0f, },
+                  { 0.0f, 1.0f, 0.0f, },
+                  { 0.0f, 0.0f, 1.0f, },
+                  { 0.0f, 0.0f, 0.0f, },
+                };
+              }
+              setProperty(node_map_, "ColorTransformationValueSelector", std::string("Gain00"));
+              setProperty(node_map_, "ColorTransformationValue", ccm[0][0]);
+              setProperty(node_map_, "ColorTransformationValueSelector", std::string("Gain01"));
+              setProperty(node_map_, "ColorTransformationValue", ccm[0][1]);
+              setProperty(node_map_, "ColorTransformationValueSelector", std::string("Gain02"));
+              setProperty(node_map_, "ColorTransformationValue", ccm[0][2]);
+              setProperty(node_map_, "ColorTransformationValueSelector", std::string("Gain10"));
+              setProperty(node_map_, "ColorTransformationValue", ccm[1][0]);
+              setProperty(node_map_, "ColorTransformationValueSelector", std::string("Gain11"));
+              setProperty(node_map_, "ColorTransformationValue", ccm[1][1]);
+              setProperty(node_map_, "ColorTransformationValueSelector", std::string("Gain12"));
+              setProperty(node_map_, "ColorTransformationValue", ccm[1][2]);
+              setProperty(node_map_, "ColorTransformationValueSelector", std::string("Gain20"));
+              setProperty(node_map_, "ColorTransformationValue", ccm[2][0]);
+              setProperty(node_map_, "ColorTransformationValueSelector", std::string("Gain21"));
+              setProperty(node_map_, "ColorTransformationValue", ccm[2][1]);
+              setProperty(node_map_, "ColorTransformationValueSelector", std::string("Gain22"));
+              setProperty(node_map_, "ColorTransformationValue", ccm[2][2]);
+              setProperty(node_map_, "ColorTransformationValueSelector", std::string("Offset0"));
+              setProperty(node_map_, "ColorTransformationValue", ccm[3][0]);
+              setProperty(node_map_, "ColorTransformationValueSelector", std::string("Offset1"));
+              setProperty(node_map_, "ColorTransformationValue", ccm[3][1]);
+              setProperty(node_map_, "ColorTransformationValueSelector", std::string("Offset2"));
+              setProperty(node_map_, "ColorTransformationValue", ccm[3][2]);
             }
-            catch (...)
-            {
-              ccm = {
-                { 1.0f, 0.0f, 0.0f, },
-                { 0.0f, 1.0f, 0.0f, },
-                { 0.0f, 0.0f, 1.0f, },
-                { 0.0f, 0.0f, 0.0f, },
-              };
-            }
-            setProperty(node_map_, "ColorTransformationValueSelector", std::string("Gain00"));
-            setProperty(node_map_, "ColorTransformationValue", ccm[0][0]);
-            setProperty(node_map_, "ColorTransformationValueSelector", std::string("Gain01"));
-            setProperty(node_map_, "ColorTransformationValue", ccm[0][1]);
-            setProperty(node_map_, "ColorTransformationValueSelector", std::string("Gain02"));
-            setProperty(node_map_, "ColorTransformationValue", ccm[0][2]);
-            setProperty(node_map_, "ColorTransformationValueSelector", std::string("Gain10"));
-            setProperty(node_map_, "ColorTransformationValue", ccm[1][0]);
-            setProperty(node_map_, "ColorTransformationValueSelector", std::string("Gain11"));
-            setProperty(node_map_, "ColorTransformationValue", ccm[1][1]);
-            setProperty(node_map_, "ColorTransformationValueSelector", std::string("Gain12"));
-            setProperty(node_map_, "ColorTransformationValue", ccm[1][2]);
-            setProperty(node_map_, "ColorTransformationValueSelector", std::string("Gain20"));
-            setProperty(node_map_, "ColorTransformationValue", ccm[2][0]);
-            setProperty(node_map_, "ColorTransformationValueSelector", std::string("Gain21"));
-            setProperty(node_map_, "ColorTransformationValue", ccm[2][1]);
-            setProperty(node_map_, "ColorTransformationValueSelector", std::string("Gain22"));
-            setProperty(node_map_, "ColorTransformationValue", ccm[2][2]);
-            setProperty(node_map_, "ColorTransformationValueSelector", std::string("Offset0"));
-            setProperty(node_map_, "ColorTransformationValue", ccm[3][0]);
-            setProperty(node_map_, "ColorTransformationValueSelector", std::string("Offset1"));
-            setProperty(node_map_, "ColorTransformationValue", ccm[3][1]);
-            setProperty(node_map_, "ColorTransformationValueSelector", std::string("Offset2"));
-            setProperty(node_map_, "ColorTransformationValue", ccm[3][2]);
-          }
 
-          setProperty(node_map_, "ColorTransformationValueSelector", std::string("Gain00"));
-          ccm[0][0] = static_cast<Spinnaker::GenApi::CFloatPtr>(node_map_->GetNode("ColorTransformationValue"))->GetValue();
-          setProperty(node_map_, "ColorTransformationValueSelector", std::string("Gain01"));
-          ccm[0][1] = static_cast<Spinnaker::GenApi::CFloatPtr>(node_map_->GetNode("ColorTransformationValue"))->GetValue();
-          setProperty(node_map_, "ColorTransformationValueSelector", std::string("Gain02"));
-          ccm[0][2] = static_cast<Spinnaker::GenApi::CFloatPtr>(node_map_->GetNode("ColorTransformationValue"))->GetValue();
-          setProperty(node_map_, "ColorTransformationValueSelector", std::string("Gain10"));
-          ccm[1][0] = static_cast<Spinnaker::GenApi::CFloatPtr>(node_map_->GetNode("ColorTransformationValue"))->GetValue();
-          setProperty(node_map_, "ColorTransformationValueSelector", std::string("Gain11"));
-          ccm[1][1] = static_cast<Spinnaker::GenApi::CFloatPtr>(node_map_->GetNode("ColorTransformationValue"))->GetValue();
-          setProperty(node_map_, "ColorTransformationValueSelector", std::string("Gain12"));
-          ccm[1][2] = static_cast<Spinnaker::GenApi::CFloatPtr>(node_map_->GetNode("ColorTransformationValue"))->GetValue();
-          setProperty(node_map_, "ColorTransformationValueSelector", std::string("Gain20"));
-          ccm[2][0] = static_cast<Spinnaker::GenApi::CFloatPtr>(node_map_->GetNode("ColorTransformationValue"))->GetValue();
-          setProperty(node_map_, "ColorTransformationValueSelector", std::string("Gain21"));
-          ccm[2][1] = static_cast<Spinnaker::GenApi::CFloatPtr>(node_map_->GetNode("ColorTransformationValue"))->GetValue();
-          setProperty(node_map_, "ColorTransformationValueSelector", std::string("Gain22"));
-          ccm[2][2] = static_cast<Spinnaker::GenApi::CFloatPtr>(node_map_->GetNode("ColorTransformationValue"))->GetValue();
-          setProperty(node_map_, "ColorTransformationValueSelector", std::string("Offset0"));
-          ccm[3][0] = static_cast<Spinnaker::GenApi::CFloatPtr>(node_map_->GetNode("ColorTransformationValue"))->GetValue();
-          setProperty(node_map_, "ColorTransformationValueSelector", std::string("Offset1"));
-          ccm[3][1] = static_cast<Spinnaker::GenApi::CFloatPtr>(node_map_->GetNode("ColorTransformationValue"))->GetValue();
-          setProperty(node_map_, "ColorTransformationValueSelector", std::string("Offset2"));
-          ccm[3][2] = static_cast<Spinnaker::GenApi::CFloatPtr>(node_map_->GetNode("ColorTransformationValue"))->GetValue();
-          std::ostringstream oss;
-          oss << "[";
-          for (size_t i = 0; i < ccm.size(); ++i)
-          {
+            setProperty(node_map_, "ColorTransformationValueSelector", std::string("Gain00"));
+            ccm[0][0] = static_cast<Spinnaker::GenApi::CFloatPtr>(node_map_->GetNode("ColorTransformationValue"))->GetValue();
+            setProperty(node_map_, "ColorTransformationValueSelector", std::string("Gain01"));
+            ccm[0][1] = static_cast<Spinnaker::GenApi::CFloatPtr>(node_map_->GetNode("ColorTransformationValue"))->GetValue();
+            setProperty(node_map_, "ColorTransformationValueSelector", std::string("Gain02"));
+            ccm[0][2] = static_cast<Spinnaker::GenApi::CFloatPtr>(node_map_->GetNode("ColorTransformationValue"))->GetValue();
+            setProperty(node_map_, "ColorTransformationValueSelector", std::string("Gain10"));
+            ccm[1][0] = static_cast<Spinnaker::GenApi::CFloatPtr>(node_map_->GetNode("ColorTransformationValue"))->GetValue();
+            setProperty(node_map_, "ColorTransformationValueSelector", std::string("Gain11"));
+            ccm[1][1] = static_cast<Spinnaker::GenApi::CFloatPtr>(node_map_->GetNode("ColorTransformationValue"))->GetValue();
+            setProperty(node_map_, "ColorTransformationValueSelector", std::string("Gain12"));
+            ccm[1][2] = static_cast<Spinnaker::GenApi::CFloatPtr>(node_map_->GetNode("ColorTransformationValue"))->GetValue();
+            setProperty(node_map_, "ColorTransformationValueSelector", std::string("Gain20"));
+            ccm[2][0] = static_cast<Spinnaker::GenApi::CFloatPtr>(node_map_->GetNode("ColorTransformationValue"))->GetValue();
+            setProperty(node_map_, "ColorTransformationValueSelector", std::string("Gain21"));
+            ccm[2][1] = static_cast<Spinnaker::GenApi::CFloatPtr>(node_map_->GetNode("ColorTransformationValue"))->GetValue();
+            setProperty(node_map_, "ColorTransformationValueSelector", std::string("Gain22"));
+            ccm[2][2] = static_cast<Spinnaker::GenApi::CFloatPtr>(node_map_->GetNode("ColorTransformationValue"))->GetValue();
+            setProperty(node_map_, "ColorTransformationValueSelector", std::string("Offset0"));
+            ccm[3][0] = static_cast<Spinnaker::GenApi::CFloatPtr>(node_map_->GetNode("ColorTransformationValue"))->GetValue();
+            setProperty(node_map_, "ColorTransformationValueSelector", std::string("Offset1"));
+            ccm[3][1] = static_cast<Spinnaker::GenApi::CFloatPtr>(node_map_->GetNode("ColorTransformationValue"))->GetValue();
+            setProperty(node_map_, "ColorTransformationValueSelector", std::string("Offset2"));
+            ccm[3][2] = static_cast<Spinnaker::GenApi::CFloatPtr>(node_map_->GetNode("ColorTransformationValue"))->GetValue();
+            std::ostringstream oss;
             oss << "[";
-            for (size_t j = 0; j < ccm[i].size(); ++j)
+            for (size_t i = 0; i < ccm.size(); ++i)
             {
-              oss << ccm[i][j];
-              if (j < ccm[i].size() - 1) oss << ",";
+              oss << "[";
+              for (size_t j = 0; j < ccm[i].size(); ++j)
+              {
+                oss << ccm[i][j];
+                if (j < ccm[i].size() - 1) oss << ",";
+              }
+              oss << "]";
+              if (i < ccm.size() - 1) oss << ",";
             }
             oss << "]";
-            if (i < ccm.size() - 1) oss << ",";
+            config.color_correction_matrix = oss.str();
           }
-          oss << "]";
-          config.color_correction_matrix = oss.str();
-        }
-        else
-        {
-          setProperty(node_map_, "ColorTransformationEnable", false);
-          setProperty(node_map_, "IspEnable", false);
+          else
+          {
+            setProperty(node_map_, "ColorTransformationEnable", false);
+            setProperty(node_map_, "IspEnable", false);
+          }
         }
       }
     }
 
-    setProperty(node_map_, "ReverseX", config.reverse_x);
-    setProperty(node_map_, "ReverseY", config.reverse_y);
+    if (level >= LEVEL_RECONFIGURE_STOP ||
+        config.reverse_x != config_.reverse_x)
+      setProperty(node_map_, "ReverseX", config.reverse_x);
+    if (level >= LEVEL_RECONFIGURE_STOP ||
+        config.reverse_y != config_.reverse_y)
+      setProperty(node_map_, "ReverseY", config.reverse_y);
+
+    // save the current config
+    config_ = config;
   }
   catch (const Spinnaker::Exception& e)
   {

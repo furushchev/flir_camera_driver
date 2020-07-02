@@ -76,6 +76,7 @@ public:
   readProperty(const Spinnaker::GenICam::gcstring property_name);
 
 protected:
+  SpinnakerConfig config_;
   Spinnaker::GenApi::INodeMap* node_map_;
 
   virtual void init();
